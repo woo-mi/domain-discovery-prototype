@@ -205,6 +205,30 @@
   .chart-head .t{color:var(--ink-msg);font-family:var(--system);font-size:14px;font-weight:500;line-height:22px}
   .chart-head .m{color:var(--ink-msg);font-family:var(--system);font-size:14px;line-height:22px}
 
+  /* expanded tool-call panel (State 7) */
+  .tools-block{display:flex;flex-direction:column;gap:10px}
+  .tools-label.clickable{cursor:pointer;width:fit-content;user-select:none}
+  .tools-label .chev{display:inline-block;transition:transform .18s ease}
+  .tools-block.open .tools-label .chev{transform:rotate(90deg)}
+  .tools-label.clickable:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+  .tool-panel{display:none;border-radius:10px;background:#fff;box-shadow:0 0 0 .5px var(--line-med);overflow:clip}
+  .tools-block.open .tool-panel{display:flex;flex-direction:column}
+  .tool-row.bordered{border-bottom:.5px solid var(--line-med)}
+  .tool-row-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer;transition:background .12s ease}
+  .tool-row-head:hover{background:#F9F9F7}
+  .tool-row-head:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+  .tr-sum{color:var(--muted);font-family:var(--sans);font-size:14px;line-height:19.6px}
+  .tr-chev{flex-shrink:0;color:var(--muted-3);display:inline-block;transition:transform .18s ease,color .12s ease;font-size:15px;line-height:1}
+  .tool-row.open .tr-chev{transform:rotate(90deg);color:var(--muted)}
+  .tool-code-wrap{display:none;position:relative;padding:0 12px 12px}
+  .tool-row.open .tool-code-wrap{display:block}
+  .tool-code{margin:0;color:var(--muted);font-family:var(--mono);font-size:12.5px;line-height:18px;
+    white-space:pre;overflow:auto;max-height:230px}
+  .tool-copy{position:absolute;top:2px;right:14px;width:26px;height:26px;display:flex;align-items:center;
+    justify-content:center;border:none;background:#fff;cursor:pointer;border-radius:6px;color:#141413}
+  .tool-copy:hover{background:#F0F0EE}
+  .tool-copy:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
   /* ---------- Bottom composer ---------- */
   .bottom{position:relative;width:768px;max-width:100%;margin:0 auto;flex:0 0 auto;z-index:5;
     display:flex;flex-direction:column;background:var(--ground)}
@@ -549,6 +573,51 @@
     if(!analyzing){ const c = document.createElement("span"); c.className = "chev"; c.textContent = "›"; d.appendChild(c); }
     return d;
   }
+  // ---- State 7: expandable tool-call panel ----
+  const COPY_ICON  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  const CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 10 17 19 7"/></svg>';
+  const TOOLS = [
+    { sum:'Selected the "Win rate by segment" tile on the canvas so the updated breakdown renders in the right spot.',
+      code:'{\n  "contentHash": {\n    "tokens": "811c9dc5"\n  },\n  "selectedNodes": [\n    {\n      "id": "194U-0",\n      "name": "The artifact payload…",\n      "component": "Text",\n      "width": 768,\n      "height": 110,\n      "worldX": 22347,\n      "worldY": 2637,\n      "x": 0,\n      "y": 0,\n      "artboardId": "18YG-0",\n      "artboardName": "05 · Suggested Questions",\n      "parentId": "194T-0",\n      "childCount": 0\n    }\n  ],\n  "count": 1\n}' },
+    { sum:"Read the tile's node info — 720×405, three chart states — to match sizing before writing the update.",
+      code:'{\n  "id": "1A2B-0",\n  "name": "Win rate by segment",\n  "component": "Frame",\n  "width": 720,\n  "height": 405,\n  "chartStates": ["default", "hover", "empty"],\n  "worldX": 22347,\n  "worldY": 2637,\n  "x": 0,\n  "y": 0,\n  "artboardId": "18YG-0",\n  "childCount": 3\n}' }
+  ];
+  function toolRow(t, bordered){
+    const row = el("tool-row"+(bordered?" bordered":""));
+    const head = el("tool-row-head");
+    head.setAttribute("role","button"); head.setAttribute("tabindex","0"); head.setAttribute("aria-expanded","false");
+    head.innerHTML = '<span class="tr-sum">'+esc(t.sum)+'</span><span class="tr-chev">›</span>';
+    const wrap = el("tool-code-wrap");
+    const copy = document.createElement("button");
+    copy.type="button"; copy.className="tool-copy"; copy.title="Copy"; copy.setAttribute("aria-label","Copy code"); copy.innerHTML=COPY_ICON;
+    copy.addEventListener("click", e=>{
+      e.stopPropagation();
+      try{ if(navigator.clipboard) navigator.clipboard.writeText(t.code); }catch(_){}
+      copy.innerHTML = CHECK_ICON;
+      setTimeout(()=>{ copy.innerHTML = COPY_ICON; }, 1200);
+    });
+    const pre = document.createElement("pre"); pre.className="tool-code"; pre.textContent = t.code;
+    wrap.appendChild(copy); wrap.appendChild(pre);
+    row.appendChild(head); row.appendChild(wrap);
+    const toggle = ()=>{ const open=row.classList.toggle("open"); head.setAttribute("aria-expanded", open); };
+    head.addEventListener("click", toggle);
+    head.addEventListener("keydown", e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggle(); } });
+    return row;
+  }
+  function toolsBlock(){
+    const wrap = el("tools-block");
+    const label = el("tools-label clickable");
+    label.setAttribute("role","button"); label.setAttribute("tabindex","0"); label.setAttribute("aria-expanded","false");
+    label.innerHTML = '<span class="wa">WisdomAI</span><span class="rest"> used 2 tools</span><span class="chev">›</span>';
+    const panel = el("tool-panel");
+    TOOLS.forEach((t,i)=> panel.appendChild(toolRow(t, i < TOOLS.length-1)));
+    wrap.appendChild(label); wrap.appendChild(panel);
+    const toggle = ()=>{ const open=wrap.classList.toggle("open"); label.setAttribute("aria-expanded", open); };
+    label.addEventListener("click", toggle);
+    label.addEventListener("keydown", e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggle(); } });
+    return wrap;
+  }
+
   const CHK = '<svg viewBox="0 0 12 10" width="12" height="10"><path d="M1 5.4 4.2 8.6 10.6 1.2" fill="none" stroke="#73726C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function rowIcon(state){
     if(state==="done")    return '<span class="ico">'+CHK+'</span>';
@@ -593,7 +662,7 @@
   function completeAnalysis(label, refs, formula, period){
     setRowDone(refs[3], "ran");
     setRowDone(refs[4], "Completed");
-    label.replaceWith(toolsLabel(false));
+    label.replaceWith(toolsBlock());
     post.appendChild(el("msg","Win rate climbed in every segment this year. Enterprise leads at 34% in Q4, up 6 points since Q1. The full trend:"));
     const ch = el("chart-head");
     ch.innerHTML = '<span class="t">Win rate by segment</span><span class="m">'+esc(formula)+' · '+esc(period)+' · Sales + Revenue</span>';
