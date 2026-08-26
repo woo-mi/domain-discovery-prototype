@@ -230,6 +230,39 @@
   .tool-copy:hover{background:#F0F0EE}
   .tool-copy:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 
+  /* insight chart card (State 8) */
+  .insight-card{align-self:stretch;border:.5px solid var(--line-med);border-radius:8px;background:#fff;
+    overflow:hidden;display:flex;flex-direction:column}
+  .ic-chart{border-bottom:1px solid #E4E8F2;padding:12px 16px 18px}
+  .ic-title{color:#0B1020;font-family:var(--system);font-size:14px;font-weight:600;line-height:18px}
+  .ic-sub{color:#5B6472;font-family:var(--system);font-size:12.5px;line-height:16px;margin-bottom:8px}
+  .ic-legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px}
+  .ic-leg{display:flex;align-items:center;gap:5px}
+  .ic-leg i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+  .ic-leg span{color:#40464F;font-family:var(--system);font-size:11px;line-height:14px}
+  .ic-svg svg{width:100%;height:auto;display:block}
+  .ic-xaxis{display:flex;margin-top:4px}
+  .ic-xaxis div{flex:1;text-align:center;color:#8A93A3;font-family:var(--system);font-size:10.5px;line-height:14px}
+  .ic-insights{display:flex;flex-direction:column;gap:9px;padding:18px 16px 24px}
+  .ic-bullet{display:flex;align-items:flex-start;gap:9px}
+  .ic-bullet i{width:5px;height:5px;border-radius:50%;background:#374151;flex-shrink:0;margin-top:8px}
+  .ic-bullet span{color:#333444;font-family:var(--system);font-size:14px;line-height:21px}
+  .ic-foot{border-top:.5px solid rgba(31,30,29,.15);padding:11px 16px;display:flex;align-items:center;
+    justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .ic-fb{display:flex;align-items:center;gap:2px}
+  .ic-fb button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;
+    background:none;cursor:pointer;border-radius:6px;color:#3D3D3A;transition:background .12s ease}
+  .ic-fb button:hover{background:#F2F2F1}
+  .ic-fb button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .ic-actions{display:flex;align-items:center;gap:8px}
+  .ic-btn{height:32px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;padding:0 12px;
+    font-family:var(--sans);font-size:12px;cursor:pointer;border:none;transition:background .14s ease}
+  .ic-btn.sources{background:transparent;color:#141413;box-shadow:inset 0 0 0 1px rgba(31,30,29,.4);padding:0 12px 0 10px}
+  .ic-btn.sources:hover{background:#F2F2F1}
+  .ic-btn.open{background:#141413;color:#fff;font-weight:600}
+  .ic-btn.open:hover{background:#000}
+  .ic-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
   /* ---------- Bottom composer ---------- */
   .bottom{position:relative;width:768px;max-width:100%;margin:0 auto;flex:0 0 auto;z-index:5;
     display:flex;flex-direction:column;background:var(--ground)}
@@ -668,7 +701,96 @@
     const ch = el("chart-head");
     ch.innerHTML = '<span class="t">Win rate by segment</span><span class="m">'+esc(formula)+' · '+esc(period)+' · Sales + Revenue</span>';
     post.appendChild(ch);
-    post.appendChild(thinkingClone("23s · thinking..."));
+    const think = thinkingClone("23s · thinking...");
+    post.appendChild(think);
+    scrollDown();
+    after(2600, ()=> showInsight(think));
+  }
+
+  // ---- State 8: rendered insight chart ----
+  const CHART_SVG =
+    '<svg viewBox="0 0 723.92 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bookings by segment, quarterly stacked bar chart">'+
+    '<line x1="-5.892" y1="20" x2="722.108" y2="20" stroke="#EEF1F6" stroke-dasharray="3 3"/>'+
+    '<line x1="-5.892" y1="59" x2="722.108" y2="59" stroke="#EEF1F6" stroke-dasharray="3 3"/>'+
+    '<line x1="-5.392" y1="98" x2="722.108" y2="98" stroke="#EEF1F6" stroke-dasharray="3 3"/>'+
+    '<line x1="-5.392" y1="137" x2="722.108" y2="137" stroke="#EEF1F6" stroke-dasharray="3 3"/>'+
+    '<line x1="-5.392" y1="176" x2="722.108" y2="176" stroke="#EEF1F6" stroke-dasharray="3 3"/>'+
+    '<line x1="-5.54" y1="215" x2="722.108" y2="215" stroke="#3B3B3B33"/>'+
+    '<g text-anchor="end">'+
+    '<text x="16.147" y="14.774" font-size="8" fill="#8A93A3">1,500</text>'+
+    '<text x="16.129" y="53.774" font-size="8" fill="#8A93A3">1,200</text>'+
+    '<text x="10.247" y="92.774" font-size="8" fill="#8A93A3">900</text>'+
+    '<text x="10.247" y="131.774" font-size="8" fill="#8A93A3">600</text>'+
+    '<text x="10.169" y="170.774" font-size="8" fill="#8A93A3">300</text>'+
+    '<text x="-0.295" y="211.774" font-size="8" fill="#8A93A3">0</text></g><g>'+
+    '<rect x="49.641" y="190.844" width="42.885" height="23.816" fill="#3EA0E6"/><rect x="49.641" y="172.041" width="42.885" height="18.802" fill="#9CD033"/><rect x="49.641" y="153.24" width="42.885" height="18.802" fill="#5263FF"/><rect x="49.641" y="146.722" width="42.885" height="6.518" rx="2" fill="#3628B2"/>'+
+    '<rect x="117.543" y="185.83" width="42.885" height="28.83" fill="#3EA0E6"/><rect x="117.543" y="166.401" width="42.885" height="19.429" fill="#9CD033"/><rect x="117.543" y="145.092" width="42.885" height="21.309" fill="#5263FF"/><rect x="117.543" y="138.197" width="42.885" height="6.894" rx="2" fill="#3628B2"/>'+
+    '<rect x="185.445" y="190.217" width="42.885" height="24.443" fill="#3EA0E6"/><rect x="185.445" y="174.548" width="42.885" height="15.668" fill="#9CD033"/><rect x="185.445" y="157.626" width="42.885" height="16.922" fill="#5263FF"/><rect x="185.445" y="153.49" width="42.885" height="4.137" rx="2" fill="#3628B2"/>'+
+    '<rect x="253.345" y="173.295" width="42.885" height="41.365" fill="#3EA0E6"/><rect x="253.345" y="148.853" width="42.885" height="24.443" fill="#9CD033"/><rect x="253.345" y="128.796" width="42.885" height="20.055" fill="#5263FF"/><rect x="253.345" y="123.782" width="42.885" height="5.014" rx="2" fill="#3628B2"/>'+
+    '<rect x="321.247" y="149.479" width="42.885" height="65.181" fill="#3EA0E6"/><rect x="321.247" y="113.128" width="42.885" height="36.351" fill="#9CD033"/><rect x="321.247" y="84.924" width="42.885" height="28.204" fill="#5263FF"/><rect x="321.247" y="78.658" width="42.885" height="6.268" rx="2" fill="#3628B2"/>'+
+    '<rect x="389.149" y="159.507" width="42.885" height="55.153" fill="#3EA0E6"/><rect x="389.149" y="126.917" width="42.885" height="32.59" fill="#9CD033"/><rect x="389.149" y="99.339" width="42.885" height="27.576" fill="#5263FF"/><rect x="389.149" y="93.825" width="42.885" height="5.516" rx="2" fill="#3628B2"/>'+
+    '<rect x="457.051" y="139.451" width="42.885" height="75.209" fill="#3EA0E6"/><rect x="457.051" y="101.846" width="42.885" height="37.605" fill="#9CD033"/><rect x="457.051" y="74.897" width="42.885" height="26.95" fill="#5263FF"/><rect x="457.051" y="70.259" width="42.885" height="4.638" rx="2" fill="#3628B2"/>'+
+    '<rect x="524.953" y="126.917" width="42.885" height="87.743" fill="#3EA0E6"/><rect x="524.953" y="84.298" width="42.885" height="42.619" fill="#9CD033"/><rect x="524.953" y="57.975" width="42.885" height="26.323" fill="#5263FF"/><rect x="524.953" y="53.211" width="42.885" height="4.763" rx="2" fill="#3628B2"/>'+
+    '<rect x="592.854" y="110.621" width="42.885" height="104.039" fill="#3EA0E6"/><rect x="592.854" y="64.242" width="42.885" height="46.379" fill="#9CD033"/><rect x="592.854" y="39.172" width="42.885" height="25.069" fill="#5263FF"/><rect x="592.854" y="34.66" width="42.885" height="4.512" rx="2" fill="#3628B2"/>'+
+    '<rect x="660.756" y="119.396" width="42.885" height="95.264" fill="#3EA0E6"/><rect x="660.756" y="76.777" width="42.885" height="42.619" fill="#9CD033"/><rect x="660.756" y="51.708" width="42.885" height="25.069" fill="#5263FF"/><rect x="660.756" y="47.445" width="42.885" height="4.262" rx="2" fill="#3628B2"/></g>'+
+    '<g font-weight="600" text-anchor="middle" fill="#0B1020" font-size="8.5">'+
+    '<text x="70.501" y="137.649">542</text><text x="138.433" y="129.131">610</text><text x="206.365" y="144.522">488</text><text x="274.297" y="114.659">725</text><text x="342.229" y="69.355">1,085</text><text x="410.161" y="84.582">964</text><text x="478.093" y="60.924">1,152</text><text x="546.025" y="43.809">1,288</text><text x="613.957" y="25.184">1,436</text><text x="681.889" y="38.02">1,334</text></g></svg>';
+
+  function iconBtn(svg, label){
+    const b = document.createElement("button");
+    b.type="button"; b.setAttribute("aria-label",label); b.title=label; b.innerHTML=svg;
+    return b;
+  }
+  function buildInsightCard(){
+    const card = el("insight-card");
+    const chart = el("ic-chart");
+    chart.innerHTML =
+      '<div class="ic-title">Bookings by segment</div>'+
+      '<div class="ic-sub">Quarterly, US$K</div>'+
+      '<div class="ic-legend">'+
+        '<span class="ic-leg"><i style="background:#3EA0E6"></i><span>Data &amp; AI</span></span>'+
+        '<span class="ic-leg"><i style="background:#9CD033"></i><span>Business</span></span>'+
+        '<span class="ic-leg"><i style="background:#5263FF"></i><span>Design</span></span>'+
+        '<span class="ic-leg"><i style="background:#3628B2"></i><span>Engineering</span></span>'+
+      '</div>'+
+      '<div class="ic-svg">'+CHART_SVG+'</div>'+
+      '<div class="ic-xaxis">'+
+        '<div>Q1<br>2024</div><div>Q2</div><div>Q3</div><div>Q4</div><div>Q1<br>2025</div>'+
+        '<div>Q2</div><div>Q3</div><div>Q4</div><div>Q1<br>2026</div><div>Q2</div>'+
+      '</div>';
+    card.appendChild(chart);
+
+    const ins = el("ic-insights");
+    ins.innerHTML =
+      '<div class="ic-bullet"><i></i><span>Enterprise rose 6 pts (28% → 34%) — the steepest gain of any segment.</span></div>'+
+      '<div class="ic-bullet"><i></i><span>SMB is still lowest but closing the gap — up 5 pts year to date.</span></div>';
+    card.appendChild(ins);
+
+    const foot = el("ic-foot");
+    const fb = el("ic-fb");
+    fb.appendChild(iconBtn('<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0M3 12v4a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H3Zm18 0v4a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3Z"/><path d="M19 18a4 4 0 0 1-4 4h-3"/></svg>', 'Explain'));
+    fb.appendChild(iconBtn('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3Zm0 0 4.5-8a2 2 0 0 1 2.8 2.2L13.5 9H19a2 2 0 0 1 2 2.4l-1.3 6A2 2 0 0 1 17.7 19H7"/></svg>', 'Good response'));
+    fb.appendChild(iconBtn('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3Zm0 0-4.5 8a2 2 0 0 1-2.8-2.2L10.5 15H5a2 2 0 0 1-2-2.4l1.3-6A2 2 0 0 1 6.3 5H17"/></svg>', 'Bad response'));
+    foot.appendChild(fb);
+
+    const actions = el("ic-actions");
+    const sources = document.createElement("button");
+    sources.type="button"; sources.className="ic-btn sources";
+    sources.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg><span>Sources</span>';
+    const open = document.createElement("button");
+    open.type="button"; open.className="ic-btn open";
+    open.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8.5 8.5M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg><span>Open in WisdomAI</span>';
+    actions.appendChild(sources); actions.appendChild(open);
+    foot.appendChild(actions);
+    card.appendChild(foot);
+    return card;
+  }
+  function showInsight(thinkEl){
+    if(thinkEl) thinkEl.remove();
+    const label = el("tools-label");
+    label.innerHTML = '<span class="wa">WisdomAI</span><span class="rest"> created this insights</span><span class="chev">›</span>';
+    post.appendChild(label);
+    post.appendChild(buildInsightCard());
     scrollDown();
   }
 
