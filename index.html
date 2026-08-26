@@ -180,6 +180,31 @@
   .opts.locked .opt.chosen:hover{background:var(--chip)}
   .end{display:flex;flex-direction:column;gap:10px}
 
+  /* tool / progress label (States 5-6) */
+  .tools-label{display:flex;align-items:center;gap:6px;font-family:var(--system);font-size:13px;line-height:16px}
+  .tools-label .wa{color:#194F95}
+  .tools-label .rest{color:var(--muted-3)}
+  .tools-label .chev{color:var(--muted-3);font-size:14px;line-height:1}
+
+  /* progress / summary card (States 5-6) */
+  .prog-card{align-self:stretch;border-radius:10px;background:#fff;box-shadow:0 0 0 .5px var(--line-med);overflow:clip}
+  .prog-inner{padding:16px;display:flex;flex-direction:column;gap:16px}
+  .prog-head{color:#141413;font-family:var(--system);font-size:14px;font-weight:600;line-height:19.6px}
+  .prog-rows{display:flex;flex-direction:column;gap:12px}
+  .prow{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .prow .l{display:flex;align-items:flex-start;gap:8px;min-width:0}
+  .prow .ico{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .prow .txt{color:var(--muted);font-family:var(--sans);font-size:14px;line-height:19.6px}
+  .prow .val{color:var(--muted);font-family:var(--sans);font-size:14px;line-height:19.6px;text-align:right;flex-shrink:0}
+  .prow.pending .txt,.prow.pending .val{color:#B8B8AE}
+  .pcircle{width:12px;height:12px;border-radius:50%;border:1.5px solid #D3D2CC}
+  .rrun{width:13px;height:13px;border-radius:50%;border:2px solid #E4E2DA;border-top-color:var(--muted);animation:spin .9s linear infinite}
+
+  /* result chart heading (State 6) */
+  .chart-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .chart-head .t{color:var(--ink-msg);font-family:var(--system);font-size:14px;font-weight:500;line-height:22px}
+  .chart-head .m{color:var(--ink-msg);font-family:var(--system);font-size:14px;line-height:22px}
+
   /* ---------- Bottom composer ---------- */
   .bottom{position:relative;width:768px;max-width:100%;margin:0 auto;flex:0 0 auto;z-index:5;
     display:flex;flex-direction:column;background:var(--ground)}
@@ -356,6 +381,8 @@
     "Closed-won ÷ opportunities that reached Stage 4+"
   ];
   const PERIOD_OPTS = ["FY2026 to date", "Trailing 12 months", "Last 4 quarters"];
+  const DEF_SHORT   = ["closed-won ÷ (won + lost)", "closed-won ÷ all opps created", "closed-won ÷ Stage 4+ opps"];
+  const DEF_FORMULA = ["won ÷ (won+lost)", "won ÷ all opps", "won ÷ Stage 4+ opps"];
 
   const CHECK_SVG =
     '<div class="box"><svg viewBox="0 0 12 10" width="11" height="10">'+
@@ -413,6 +440,13 @@
 
   function scrollDown(){
     requestAnimationFrame(()=> scroll.scrollTo({top:scroll.scrollHeight, behavior: reduce?"auto":"smooth"}));
+  }
+  const after = (ms, fn)=> setTimeout(fn, reduce ? Math.min(ms,250) : ms);
+  function thinkingClone(text){
+    const t = el("thinking");
+    t.appendChild(thinking.querySelector(".spark").cloneNode(true));
+    t.appendChild(el("lbl", text));
+    return t;
   }
 
   // ---- Small DOM helpers ----
@@ -475,6 +509,7 @@
   }
 
   let defAnswer = null;
+  let periodIdx = null;
 
   function startClarification(){
     post.appendChild(el("msg","I'll run this through Wisdom, which analyzes your governed business data. Win rate can be defined a few ways across your workspace, so Wisdom needs quick clarifications. Your answer scopes the whole analysis. How should win rate be defined?"));
@@ -490,16 +525,80 @@
     scrollDown();
   }
   function onPeriodPicked(i){
+    periodIdx = i;
     post.appendChild(userChip(String(i+1)));
     const end = el("end");
     end.appendChild(el("msg",
       'Wisdom needed quick clarifications that scoped the whole analysis. You answered the question '+
       '"How should win rate be defined?" to '+esc(DEF_OPTS[defAnswer])+' for '+esc(PERIOD_OPTS[i])+'.'));
-    const think = el("thinking");
-    think.appendChild(thinking.querySelector(".spark").cloneNode(true));
-    think.appendChild(el("lbl","6s · thinking..."));
+    const think = thinkingClone("6s · thinking...");
     end.appendChild(think);
     post.appendChild(end);
+    scrollDown();
+    after(1500, ()=>{ think.remove(); showAnalyzing(); });
+  }
+
+  // ---- States 5 & 6: working progress -> completed ----
+  function toolsLabel(analyzing){
+    const d = el("tools-label");
+    if(analyzing) d.appendChild(thinking.querySelector(".spark").cloneNode(true));
+    const wa = document.createElement("span"); wa.className = "wa"; wa.textContent = "WisdomAI";
+    const rest = document.createElement("span"); rest.className = "rest";
+    rest.textContent = analyzing ? " is analyzing win rate by segment..." : " used 2 tools";
+    d.appendChild(wa); d.appendChild(rest);
+    if(!analyzing){ const c = document.createElement("span"); c.className = "chev"; c.textContent = "›"; d.appendChild(c); }
+    return d;
+  }
+  const CHK = '<svg viewBox="0 0 12 10" width="12" height="10"><path d="M1 5.4 4.2 8.6 10.6 1.2" fill="none" stroke="#73726C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function rowIcon(state){
+    if(state==="done")    return '<span class="ico">'+CHK+'</span>';
+    if(state==="running") return '<span class="ico"><span class="rrun"></span></span>';
+    return '<span class="ico"><span class="pcircle"></span></span>';
+  }
+  function buildProgressCard(rows){
+    const card = el("prog-card"), inner = el("prog-inner");
+    inner.appendChild(el("prog-head","Analyzing win rate by segment"));
+    const wrap = el("prog-rows");
+    const refs = rows.map(r=>{
+      const row = el("prow"+(r.s==="pending"?" pending":""));
+      row.innerHTML = '<span class="l">'+rowIcon(r.s)+'<span class="txt">'+esc(r.l)+'</span></span>'+
+                      '<span class="val">'+esc(r.v)+'</span>';
+      wrap.appendChild(row);
+      return row;
+    });
+    inner.appendChild(wrap); card.appendChild(inner);
+    return {card, refs};
+  }
+  function setRowDone(row, value){
+    row.classList.remove("pending");
+    row.querySelector(".ico").innerHTML = CHK;
+    row.querySelector(".val").textContent = value;
+  }
+  function showAnalyzing(){
+    const formula = DEF_FORMULA[defAnswer], period = PERIOD_OPTS[periodIdx];
+    post.appendChild(el("msg","Got it — "+esc(DEF_SHORT[defAnswer])+", "+esc(period)+". Wisdom is analyzing across Sales and Revenue now."));
+    const label = toolsLabel(true);
+    post.appendChild(label);
+    const {card, refs} = buildProgressCard([
+      {l:"Resolved definition", v:formula, s:"done"},
+      {l:"Planned analysis", v:"5 workstreams", s:"done"},
+      {l:"Applied reviewed query Qarterly win rate", v:"trusted", s:"done"},
+      {l:"Querying 2 tables", v:"running...", s:"running"},
+      {l:"Segment & compute rates — Enterprise, Mid-Market, SMB", v:"", s:"pending"}
+    ]);
+    post.appendChild(card);
+    scrollDown();
+    after(2400, ()=> completeAnalysis(label, refs, formula, period));
+  }
+  function completeAnalysis(label, refs, formula, period){
+    setRowDone(refs[3], "ran");
+    setRowDone(refs[4], "Completed");
+    label.replaceWith(toolsLabel(false));
+    post.appendChild(el("msg","Win rate climbed in every segment this year. Enterprise leads at 34% in Q4, up 6 points since Q1. The full trend:"));
+    const ch = el("chart-head");
+    ch.innerHTML = '<span class="t">Win rate by segment</span><span class="m">'+esc(formula)+' · '+esc(period)+' · Sales + Revenue</span>';
+    post.appendChild(ch);
+    post.appendChild(thinkingClone("23s · thinking..."));
     scrollDown();
   }
 
