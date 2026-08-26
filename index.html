@@ -51,11 +51,12 @@
     transform-origin:center center;
     flex:0 0 auto;
     overflow:hidden;
+    display:flex;flex-direction:column;
   }
 
   /* ---------- Top bar ---------- */
   .topbar{
-    position:absolute;left:0;top:0;width:1728px;z-index:5;
+    position:relative;width:100%;flex:0 0 auto;z-index:5;
     display:flex;align-items:center;justify-content:space-between;
     padding:14px 20px;background:var(--ground);
   }
@@ -69,8 +70,8 @@
   .kebab .dot{position:absolute;right:-5px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--blue)}
 
   /* ---------- Scroll region + conversation ---------- */
-  .scroll{position:absolute;left:0;right:0;top:46px;bottom:140px;overflow-y:auto;overflow-x:hidden}
-  .content{width:768px;max-width:100%;margin:0 auto;padding:32px 0 8px;
+  .scroll{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden}
+  .content{width:768px;max-width:100%;margin:0 auto;padding:32px 0 64px;
     display:flex;flex-direction:column;gap:24px}
   #post{display:flex;flex-direction:column;gap:24px}
   #post:empty{display:none}
@@ -180,7 +181,7 @@
   .end{display:flex;flex-direction:column;gap:10px}
 
   /* ---------- Bottom composer ---------- */
-  .bottom{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:768px;z-index:5;
+  .bottom{position:relative;width:768px;max-width:100%;margin:0 auto;flex:0 0 auto;z-index:5;
     display:flex;flex-direction:column;background:var(--ground)}
   .branch{background:var(--branch-bg);border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 12px}
   .branch .meta{display:flex;align-items:center;gap:8px}
