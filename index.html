@@ -242,6 +242,7 @@
     border:none;background:none;padding:0;cursor:pointer;color:#71727C;
     opacity:0;transition:opacity .15s ease,color .12s ease}
   .ic-badge:hover{color:#141413}            /* State 10: badge darkens on hover */
+  .insight-card.explain-open .ic-badge{color:#141413}  /* State 11: badge stays dark while popup open */
   .ic-badge:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:50%}
   .ic-tools{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s ease}
   .ic-tool{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;
@@ -252,7 +253,7 @@
   .insight-card:focus-within .ic-badge,.insight-card:focus-within .ic-tools,
   .insight-card.explain-open .ic-badge,.insight-card.explain-open .ic-tools{opacity:1}
   /* State 11: explainability popup */
-  .explain-pop{position:absolute;top:36px;left:150px;width:385px;max-width:calc(100% - 32px);
+  .explain-pop{position:absolute;top:36px;left:44px;width:400px;max-width:calc(100% - 32px);
     background:#fff;border:1px solid #E9E9E9;border-radius:10px;box-shadow:0 8px 24px #1819300F;
     padding:10px 12px 12px;z-index:50;display:none}
   .insight-card.explain-open .explain-pop{display:block}
@@ -837,7 +838,15 @@
     card.appendChild(pop);
 
     const badge = card.querySelector(".ic-badge");
-    badge.addEventListener("click", e=>{ e.stopPropagation(); card.classList.toggle("explain-open"); });
+    badge.addEventListener("click", e=>{
+      e.stopPropagation();
+      const opening = !card.classList.contains("explain-open");
+      card.classList.toggle("explain-open");
+      if(opening){
+        pop.style.left = badge.offsetLeft + "px";
+        pop.style.top = (badge.offsetTop + badge.offsetHeight + 6) + "px";
+      }
+    });
     pop.querySelector(".ep-close").addEventListener("click", e=>{ e.stopPropagation(); card.classList.remove("explain-open"); });
     pop.addEventListener("click", e=> e.stopPropagation());
     document.addEventListener("click", ()=> card.classList.remove("explain-open"));
